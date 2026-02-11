@@ -9,7 +9,7 @@ const pool = new Pool({
   database: "supermarche",
 });
 
-pool.on("connect", () => {
-  console.log("PostgreSQL connecté");
-});
+// pool.on("connect", () => {
+//   console.log("PostgreSQL connecté");
+// });
 export default pool;

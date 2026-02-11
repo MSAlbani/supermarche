@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 interface Column<T> {
@@ -11,7 +12,7 @@ interface TableProps<T> {
   pageSize?: number;
 }
 
-const Table = <T,>({ data, columns, pageSize = 5 }: TableProps<T>) => {
+const Table = <T,>({ data, columns, pageSize = 10 }: TableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(data.length / pageSize);
@@ -20,14 +21,14 @@ const Table = <T,>({ data, columns, pageSize = 5 }: TableProps<T>) => {
   const paginatedData = data.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="min-w-full">
-        <thead className="bg-gray-100">
+    <div className="w-full overflow-x-auto pt-5">
+      <table className="min-w-full ">
+        <thead className="">
           <tr>
             {columns.map((col, index) => (
               <th
                 key={index}
-                className="px-4 py-2 text-left border-b border-gray-300 text-sm font-semibold"
+                className="px-4 py-2 text-left border-b border-gray-300 text-neutral-500 text-lg font-semibold"
               >
                 {col.header}
               </th>
@@ -37,10 +38,7 @@ const Table = <T,>({ data, columns, pageSize = 5 }: TableProps<T>) => {
 
         <tbody>
           {paginatedData.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className="border-b border-gray-300 hover:bg-gray-50"
-            >
+            <tr key={rowIndex} className=" border-gray-300 hover:bg-gray-200">
               {columns.map((col, colIndex) => (
                 <td key={colIndex} className="px-4 py-2 text-sm">
                   {col.cell(row)}
@@ -50,26 +48,38 @@ const Table = <T,>({ data, columns, pageSize = 5 }: TableProps<T>) => {
           ))}
         </tbody>
       </table>
+      {paginatedData.length === 0 && (
+        <div className="flex items-center h-52 flex-col gap-3 font-bold text-lg text-neutral-400 justify-center">
+          <Loader className="w-10 h-10" />
+          <p>Aucune donnée trouvée</p>
+        </div>
+      )}
 
       {/* PAGINATION */}
-      <div className="flex justify-end gap-2 mt-4">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-        >
-          Précédent
-        </button>
+      <div className="flex justify-end gap-2 mt-8">
+        {paginatedData.length > 0 && (
+          <>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="cursor-pointer hover:bg-gray-300"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
 
-        <span>
-          Page {currentPage} / {totalPages}
-        </span>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
 
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-        >
-          Suivant
-        </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="cursor-pointer hover:bg-gray-300"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -23,3 +23,15 @@ export const createUser = async (nom_complet, login, mot_de_passe, id_role) => {
   );
   return result.rows[0];
 };
+
+// Recupérer tout les utilisateurs
+
+export const allUsers = async () => {
+  const utilisateurs =
+    await pool.query(`SELECT u.id_utilisateur, u.nom_complet, u.login, u.actif, r.libelle 
+    FROM utilisateurs u
+    JOIN roles r ON u.id_role = r.id_role
+    `);
+
+  return utilisateurs.rows;
+};

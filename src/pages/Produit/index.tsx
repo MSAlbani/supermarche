@@ -5,9 +5,16 @@ import { useState } from "react";
 import { ProduitCard } from "../../components/produit/ProduitCard";
 import Input from "../../components/ui/Input";
 import ProduitForm from "../../components/produit/ProduitForm";
+import axios from "axios";
 
+interface Categorie {
+  id_categorie: number;
+  libelle: string;
+  description: string;
+}
 export default function Produit() {
   const [showForm, setShowForm] = useState<boolean>(false);
+  const [categories, setCategories] = useState<Categorie>();
   const [filters, setFilters] = useState({
     categorie: "all",
     forme: "all",
@@ -70,6 +77,10 @@ export default function Produit() {
       lowStock: true,
     },
   ];
+
+  const getCategorie = () => {
+    axios.get("http://localhost:5000/api/")
+  }
 
   return (
     <div className="">

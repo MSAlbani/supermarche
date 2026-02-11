@@ -226,7 +226,9 @@ export default function Vente(): React.JSX.Element {
                   </Select>
                 </div>
               </Card>
+
               {/* Résumé et paiement */}
+
               <Card className="border-gray-300">
                 {/* Titre de la carte */}
                 <div className="flex items-center font-semibold text-xl gap-2 mb-4">
