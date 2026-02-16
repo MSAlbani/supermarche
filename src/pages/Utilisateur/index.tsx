@@ -3,27 +3,10 @@ import { Button } from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import { Briefcase, Trash, Edit, Users } from "lucide-react";
 import Table from "../../components/ui/Table";
-import axios from "axios";
+import { useUserStore, useRoleStore } from "../../store/userStore";
+import type { Role, Utilisateurs } from "../../store/userStore";
 
-interface Role {
-  libelle: string;
-  utilisateursAssignes: number;
-}
-
-interface User {
-  // id_utilisateur: number;
-  nom_complet: string;
-  login: string;
-  actif: boolean;
-  libelle: string;
-}
-
-const roles: Role[] = [
-  { libelle: "ADMIN", utilisateursAssignes: 3 },
-  { libelle: "VENDEUR", utilisateursAssignes: 5 },
-  { libelle: "CAISSIER", utilisateursAssignes: 2 },
-];
-
+// @&Of*$o*23&10&@
 const roleColumn = [
   {
     header: "Libellé du rôle",
@@ -32,12 +15,18 @@ const roleColumn = [
     ),
   },
   {
-    header: "Aperçu",
-    cell: () => <span className="text-sm text-gray-600">Aperçu du rôle</span>,
+    header: "Description",
+    cell: (role: Role) => (
+      <span className="text-sm text-gray-600">{role.description}</span>
+    ),
   },
   {
     header: "Utilisateurs assignés",
-    cell: () => <span className="text-sm text-gray-600">Utilisateurs</span>,
+    cell: (role: Role) => (
+      <span className="text-sm px-2.5 py-0.5 items-center text-center font-semibold border border-gray-200 rounded-md text-gray-600">
+        {role.nombre} {role.nombre > 1 ? "utilisateurs" : "utilisateur"}
+      </span>
+    ),
   },
   {
     header: "Actions",
@@ -61,7 +50,7 @@ const roleColumn = [
 const userColumn = [
   {
     header: "Nom et Prénom",
-    cell: (utilisateurs: User) => (
+    cell: (utilisateurs: Utilisateurs) => (
       <span className="font-medium text-gray-800">
         {utilisateurs.nom_complet}
       </span>
@@ -69,21 +58,21 @@ const userColumn = [
   },
   {
     header: "Login",
-    cell: (utilisateurs: User) => (
+    cell: (utilisateurs: Utilisateurs) => (
       <span className="font-medium text-gray-800">{utilisateurs.login}</span>
     ),
   },
   {
     header: "Rôle",
-    cell: (utilisateurs: User) => (
-      <span className="font-medium text-gray-800">{utilisateurs.libelle}</span>
+    cell: (utilisateurs: Utilisateurs) => (
+      <span className="font-medium text-gray-800">{utilisateurs.role}</span>
     ),
   },
   {
     header: "Etat",
-    cell: (utilisateurs: User) => (
+    cell: (utilisateurs: Utilisateurs) => (
       <span
-        className={`${utilisateurs.actif === true ? "text-blue-600" : "text-red-600"} text-sm `}
+        className={`${utilisateurs.actif === true ? "text-blue-600 border-blue-600 " : "text-red-600"} bg-green-100 px-3 my-auto text-sm font-semibold border rounded-lg `}
       >
         {utilisateurs.actif === true ? "Actif" : "Inactif"}
       </span>
@@ -91,7 +80,7 @@ const userColumn = [
   },
   {
     header: "Actions",
-    cell: (utilisateurs: User) => (
+    cell: (utilisateurs: Utilisateurs) => (
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -110,26 +99,17 @@ const userColumn = [
 
 export default function Utilisateur(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState("utilisateurs");
-  const [utilisateurs, setUtilisateur] = useState([]);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91dGlsaXNhdGV1ciI6MSwicm9sZSI6ImFkbWluaXN0cmF0ZXVyIiwiaWF0IjoxNzcwNjU5MTQzLCJleHAiOjE3NzA3NDU1NDN9.uUScccgPnn8zyaSm9YfWj6djH9PkySprrHJsAnqlK9Y";
-
-  const getUsers = async () => {
-    axios
-      .get("http://localhost:5000/api/users/allUsers", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-      })
-      .then((res) => {
-        if (res.status === 200) setUtilisateur(res.data);
-      });
-  };
+  const { utilisateurs, loadingUser, errorUser, getUtilisateurs } =
+    useUserStore();
+  const { roles, loadingRole, erreurRole, getRoles } = useRoleStore();
 
   useEffect(() => {
-    getUsers();
-  }, []);
+    getUtilisateurs();
+  }, [getUtilisateurs]);
+
+  useEffect(() => {
+    getRoles();
+  }, [getRoles]);
 
   return (
     <div>
@@ -166,6 +146,9 @@ export default function Utilisateur(): React.JSX.Element {
         {activeTab === "utilisateurs" && (
           <Card className="border-gray-300">
             <h1 className="text-xl font-semibold">Utilisateurs</h1>
+            {loadingUser && <p>Chargement encours....</p>}
+            {errorUser && <p className="text-red-500">{errorUser}</p>}
+            {}
             <Table data={utilisateurs} columns={userColumn} />
           </Card>
         )}
@@ -173,6 +156,8 @@ export default function Utilisateur(): React.JSX.Element {
         {activeTab === "roles" && (
           <Card className="border-gray-300">
             <h1 className="text-xl font-semibold">Rôles</h1>
+            {loadingRole && <p>Chargement encours....</p>}
+            {erreurRole && <p className="text-red-500">{erreurRole}</p>}
             <Table data={roles} columns={roleColumn} />
           </Card>
         )}

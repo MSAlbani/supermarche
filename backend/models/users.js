@@ -28,7 +28,7 @@ export const createUser = async (nom_complet, login, mot_de_passe, id_role) => {
 
 export const allUsers = async () => {
   const utilisateurs =
-    await pool.query(`SELECT u.id_utilisateur, u.nom_complet, u.login, u.actif, r.libelle 
+    await pool.query(`SELECT u.id_utilisateur, u.nom_complet, u.login, u.actif, r.libelle as role 
     FROM utilisateurs u
     JOIN roles r ON u.id_role = r.id_role
     `);

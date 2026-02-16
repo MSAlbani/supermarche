@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Wrapper from "./components/Wrapper.tsx";
 // import Dashboard from "./pages/Dashboard";
@@ -6,13 +6,37 @@ import Login from "./pages/Login";
 import Produit from "./pages/Produit/index.tsx";
 import Vente from "./pages/Vente/index.tsx";
 import Utilisateur from "./pages/Utilisateur/index.tsx";
+import { useAuthStore } from "./store/authStore.ts";
+import api from "./api/axios.ts";
 
 function RequireAuth({ children }: { children: React.JSX.Element }) {
-  const isAuth = localStorage.getItem("isAuthenticated") === "true";
-  return isAuth ? children : <Navigate to="/login" replace />;
+  const { isAuthenticated, isChecking } = useAuthStore();
+
+  if (isChecking) {
+    return <div>Vérification...</div>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
+  const { setUser, setChecking, logout } = useAuthStore();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("/auth/me/");
+        setUser(response.data.user);
+      } catch {
+        logout();
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

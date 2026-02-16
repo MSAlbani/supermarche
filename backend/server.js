@@ -6,6 +6,9 @@ import authRoutes from "./routes/auth.routes.js";
 import panierRoutes from "./routes/panier.routes.js";
 import venteRoutes from "./routes/vente.routes.js";
 import userRoute from "./routes/user.routes.js";
+import catRoutes from "./routes/categorie.routes.js";
+import produitRoutes from "./routes/produit.routes.js";
+import roleRoutes from "./routes/role.routes.js";
 dotenv.config();
 
 const app = express();
@@ -30,6 +33,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/paniers", panierRoutes);
 app.use("/api/ventes", venteRoutes);
 app.use("/api/users", userRoute);
+app.use("/api/categories", catRoutes);
+app.use("/api/produits", produitRoutes);
+app.use("/api/roles", roleRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`🚀 Serveur lancé sur le port ${process.env.PORT}`);

@@ -1,12 +1,9 @@
 import React from "react";
 import Card from "../ui/Card";
 import { Edit, Trash2 } from "lucide-react";
-import { Badge } from "../ui/Badge";
 
 interface ProduitCardProps {
   nom: string;
-  dosage: string;
-  marque: string;
   prix: number;
   stock: number;
   expire: string;
@@ -17,8 +14,6 @@ interface ProduitCardProps {
 
 export const ProduitCard: React.FC<ProduitCardProps> = ({
   nom,
-  dosage,
-  marque,
   prix,
   stock,
   expire,
@@ -39,12 +34,12 @@ export const ProduitCard: React.FC<ProduitCardProps> = ({
           </button>
         </div>
       </div>
-      <p className="text-gray-500">{marque}</p>
+      {/* <p className="text-gray-500">{marque}</p> */}
       <div>
         <span className="text-green-600 font-semibold text-lg mt-2">
           {prix} FCFA
         </span>
-        <Badge className="text-xs">{dosage}</Badge>
+        {/* <Badge className="text-xs">{dosage}</Badge> */}
       </div>
 
       <div className="flex justify-between mt-2 text-gray-600 text-sm">

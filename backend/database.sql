@@ -36,6 +36,7 @@ CREATE TABLE categories (
 CREATE TABLE produits (
     id_produit SERIAL PRIMARY KEY,
     libelle VARCHAR(100) NOT NULL,
+    stock_alert numeric(10.2) default 0,
     actif BOOLEAN DEFAULT TRUE,
     id_categorie INT REFERENCES categories(id_categorie)
 );

@@ -1,20 +1,55 @@
-import { Plus, Search, X } from "lucide-react";
+import { Edit, Plus, Search, Trash, X } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import ProduitFiltre from "../../components/produit/ProduitFiltre";
-import { useState } from "react";
-import { ProduitCard } from "../../components/produit/ProduitCard";
+import { useEffect, useState } from "react";
 import Input from "../../components/ui/Input";
 import ProduitForm from "../../components/produit/ProduitForm";
-import axios from "axios";
+import Table from "../../components/ui/Table";
+import Card from "../../components/ui/Card";
+import { useProductStore } from "../../store/productStore";
+import { type Produit } from "../../store/productStore";
 
-interface Categorie {
-  id_categorie: number;
-  libelle: string;
-  description: string;
-}
+const produitColumn = [
+  {
+    header: "ID",
+    cell: (produits: Produit) => <span>{produits.id_produit}</span>,
+  },
+
+  {
+    header: "Libellé Produit",
+    cell: (produits: Produit) => <span>{produits.libelle}</span>,
+  },
+
+  {
+    header: "Prix de vente (FCFA)",
+    cell: (produits: Produit) => <span>{produits.prix_vente}</span>,
+  },
+
+  {
+    header: "Catégorie",
+    cell: (produits: Produit) => <span>{produits.categorie}</span>,
+  },
+  {
+    header: "Actions",
+    cell: (produits: Produit) => (
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => console.log("Modifier", produits)}
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+        <Button variant="danger" size="sm">
+          <Trash className="w-4 h-4" />
+        </Button>
+      </div>
+    ),
+  },
+];
+
 export default function Produit() {
   const [showForm, setShowForm] = useState<boolean>(false);
-  const [categories, setCategories] = useState<Categorie>();
   const [filters, setFilters] = useState({
     categorie: "all",
     forme: "all",
@@ -22,65 +57,11 @@ export default function Produit() {
     stock: "all",
   });
 
-  const medicaments = [
-    {
-      nom: "Amoxicilline",
-      dosage: "1g",
-      marque: "Antibio Labs",
-      prix: 3500,
-      stock: 7,
-      expire: "30/06/2025",
-      categories: ["antibiotique", "Ordonnance"],
-      forme: "gélule",
-      lowStock: true,
-    },
-    {
-      nom: "Vitamine C",
-      dosage: "1000mg",
-      marque: "VitaHealth",
-      prix: 2500,
-      stock: 67,
-      expire: "15/03/2026",
-      categories: ["vitamine"],
-      forme: "comprimé",
-    },
-    {
-      nom: "Amoxicilline",
-      dosage: "1g",
-      marque: "Antibio Labs",
-      prix: 1500,
-      stock: 7,
-      expire: "30/06/2025",
-      categories: ["antibiotique", "Ordonnance"],
-      forme: "gélule",
-      lowStock: true,
-    },
-    {
-      nom: "Vitamine C",
-      dosage: "1000mg",
-      marque: "VitaHealth",
-      prix: 2500,
-      stock: 67,
-      expire: "15/03/2026",
-      categories: ["vitamine"],
-      forme: "comprimé",
-    },
-    {
-      nom: "Amoxicilline",
-      dosage: "1g",
-      marque: "Antibio Labs",
-      prix: 1500,
-      stock: 7,
-      expire: "30/06/2025",
-      categories: ["antibiotique", "Ordonnance"],
-      forme: "gélule",
-      lowStock: true,
-    },
-  ];
+  const { produits, getProduits, loading, error } = useProductStore();
 
-  const getCategorie = () => {
-    axios.get("http://localhost:5000/api/")
-  }
+  useEffect(() => {
+    getProduits();
+  }, [getProduits]);
 
   return (
     <div className="">
@@ -132,13 +113,11 @@ export default function Produit() {
         </div>
 
         {/* Liste des produits */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {medicaments.map((med, idx) => (
-            <div key={idx}>
-              <ProduitCard {...med} />
-            </div>
-          ))}
-        </div>
+        <Card className="border-gray-300">
+          {loading && <p>Chargement...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          <Table data={produits} columns={produitColumn} />
+        </Card>
       </div>
     </div>
   );

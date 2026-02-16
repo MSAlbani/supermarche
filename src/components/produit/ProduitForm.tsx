@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "../ui/Card";
 import { Pill, Save, X } from "lucide-react";
 import { Button } from "../ui/Button";
@@ -11,31 +11,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/Select";
+import axios from "axios";
 // import { Select, SelectContent, SelectItem } from "../ui/Select";
 interface ProduitFormProps {
   newProduct: boolean;
 }
+
 export const ProduitForm: React.FC<ProduitFormProps> = ({ newProduct }) => {
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     forme: "Forme",
     categorie: "Categorie",
   });
-  const handleChange = () => {
-    // setFormData({...formData, forme: e.target.value})
-    console.log("merci");
+
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91dGlsaXNhdGV1ciI6MSwicm9sZSI6ImFkbWluaXN0cmF0ZXVyIiwiaWF0IjoxNzcwODUxMjUwLCJleHAiOjE3NzA5Mzc2NTB9.jfgKnuZKoUDWcPfSdIPG7OXfGmDxFCu8yTh2HdlkQg0";
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, categorie: e.target.value });
   };
 
-  const CATEGORIES = [
-    "antalgique",
-    "antibiotique",
-    "anti-inflammatoire",
-    "vitamine",
-    "cardiovasculaire",
-    "digestif",
-    "respiratoire",
-    "dermatologie",
-    "autre",
-  ];
+  const getCategories = () => {
+    axios
+      .get("http://localhost:5000/api/categories/afficher", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+      })
+      .then((res) => {
+        if (res.status === 200) setCategories(res.data);
+      });
+  };
+  useEffect(() => {
+    getCategories();
+  }, []);
+
+  // const CATEGORIES = [
+  //   "antalgique",
+  //   "antibiotique",
+  //   "anti-inflammatoire",
+  //   "vitamine",
+  //   "cardiovasculaire",
+  //   "digestif",
+  //   "respiratoire",
+  //   "dermatologie",
+  //   "autre",
+  // ];
 
   const FORMES = [
     "comprimé",
@@ -51,7 +73,7 @@ export const ProduitForm: React.FC<ProduitFormProps> = ({ newProduct }) => {
       <div className="bg-linear-to-r from-green-500 -mx-4 -mt-4 to-emerald-600 text-white">
         <div className="flex items-center h-18 px-4 text-xl font-medium gap-2">
           <Pill className="w-6 h-6" />
-          {newProduct ? "Nouveau Médicament" : "Modifier le Médicament"}
+          {newProduct ? "Nouveau Produit" : "Modifier le Produit"}
         </div>
       </div>
 
@@ -60,15 +82,16 @@ export const ProduitForm: React.FC<ProduitFormProps> = ({ newProduct }) => {
           {/* Informations de base */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="nom">Nom du médicament *</Label>
+              <Label htmlFor="nom">Nom du produit *</Label>
               <Input
                 id="nom"
                 // value={formData.nom}
                 // onChange={(e) => handleChange("nom", e.target.value)}
-                placeholder="Ex: Paracétamol"
+                placeholder="Ex: Riz 25"
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="prix_unitaire">Prix unitaire (FCFA) *</Label>
               <Input
@@ -83,78 +106,21 @@ export const ProduitForm: React.FC<ProduitFormProps> = ({ newProduct }) => {
             </div>
           </div>
 
-          {/* Prix et stock */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="stock_actuel">Stock actuel *</Label>
-              <Input
-                id="stock_actuel"
-                type="number"
-                // value={formData.stock_actuel}
-                // onChange={(e) => handleChange("stock_actuel", e.target.value)}
-                placeholder="0"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="stock_minimum">Stock alert</Label>
-              <Input
-                id="stock_minimum"
-                type="number"
-                // value={formData.stock_minimum}
-                // onChange={(e) => handleChange("stock_minimum", e.target.value)}
-                placeholder="10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="stock_minimum">Stock alert</Label>
-              <Input
-                id="stock_minimum"
-                type="number"
-                // value={formData.stock_minimum}
-                // onChange={(e) => handleChange("stock_minimum", e.target.value)}
-                placeholder="10"
-              />
-            </div>
-          </div>
-
-          {/* Détails produit */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fabricant">Fabricant</Label>
-              <Input
-                id="fabricant"
-                // value={formData.fabricant}
-                // onChange={(e) => handleChange("fabricant", e.target.value)}
-                placeholder="Nom du fabricant"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date_expiration">Date d'expiration</Label>
-              <Input
-                id="date_expiration"
-                type="date"
-                // value={formData.date_expiration}
-                // onChange={(e) => handleChange("date_expiration", e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Sélecteurs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
               <Label>Catégorie</Label>
-              <Select value={formData.categorie} onValueChange={handleChange}>
+              <Select
+                value={formData.categorie}
+                onValueChange={() => handleChange}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {categories.map(({ id_categorie, libelle }) => (
+                    <SelectItem key={id_categorie} value={id_categorie}>
+                      {/* {cat.charAt(0).toUpperCase() + cat.slice(1)} */}
+                      {libelle}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -162,8 +128,19 @@ export const ProduitForm: React.FC<ProduitFormProps> = ({ newProduct }) => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="stock_minimum">Stock alert</Label>
+              <Input
+                id="stock_minimum"
+                type="number"
+                // value={formData.stock_minimum}
+                // onChange={(e) => handleChange("stock_minimum", e.target.value)}
+                placeholder="10"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Forme</Label>
-              <Select value={formData.forme} onValueChange={handleChange}>
+              <Select value={formData.forme} onValueChange={() => handleChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir une forme" />
                 </SelectTrigger>

@@ -1,7 +1,9 @@
 import pool from "../config/database.js";
 
 export const allCategories = async () => {
-  const categories = await pool.query("SELECT * FROM categories");
+  const categories = await pool.query(
+    "SELECT id_categorie, libelle FROM categories WHERE actif = true",
+  );
 
   return categories.rows;
 };
@@ -14,5 +16,4 @@ export const create = async (libelle, description) => {
   return categorie.rows[0];
 };
 
-export const update = async (id, libelle, description) => {}
-
+export const update = async (id, libelle, description) => {};
