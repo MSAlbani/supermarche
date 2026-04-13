@@ -53,7 +53,6 @@ export default function Produit() {
   const [filters, setFilters] = useState({
     categorie: "all",
     forme: "all",
-    prescription: "all",
     stock: "all",
   });
 
@@ -97,11 +96,6 @@ export default function Produit() {
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              {/* <input
-                placeholder="Rechercher un produit..."
-                type="text"
-                className="pl-10 w-full h-12 border-gray-200 focus:border-green-200 flex rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm "
-              /> */}
               <Input
                 placeholder="Rechercher un produit..."
                 className="pl-10"

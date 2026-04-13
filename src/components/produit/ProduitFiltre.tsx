@@ -40,7 +40,6 @@ const FORMES = [
 interface Filters {
   categorie: string;
   forme: string;
-  prescription: string;
   stock: string;
 }
 
@@ -82,7 +81,7 @@ export default function ProduitFiltre({
       </div>
 
       {/* Grille de filtres */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {/* Catégorie */}
         <Select
           value={filters.categorie}
@@ -116,23 +115,6 @@ export default function ProduitFiltre({
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-
-        {/* Ordonnance */}
-        <Select
-          value={filters.prescription}
-          onValueChange={(v) => handleFilterChange("prescription", v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Ordonnance" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous</SelectItem>
-            <SelectItem value="Ordonnance requise">
-              Ordonnance requise
-            </SelectItem>
-            <SelectItem value="Sans ordonnance">Sans ordonnance</SelectItem>
           </SelectContent>
         </Select>
 

@@ -28,6 +28,10 @@ app.use(
 app.get("/health", async (req, res) => {
   res.json({ status: "ok" });
 });
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  next();
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/paniers", panierRoutes);

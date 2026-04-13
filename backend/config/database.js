@@ -7,6 +7,7 @@ const pool = new Pool({
   user: "postgres",
   password: "@17&03&00@&",
   database: "supermarche",
+  client_encoding: "UTF8",
 });
 
 // pool.on("connect", () => {

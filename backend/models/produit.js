@@ -11,7 +11,7 @@ export const allProduct = async () => {
   return produits.rows;
 };
 
-export const create = async (libelle, id_categorie, prix_vente) => {
+export const create = async (libelle, id_categorie) => {
   const result = await pool.query(
     `INSERT INTO produits (libelle, id_categorie) VALUES ($1, $2) RETURNING *`,
     [libelle, id_categorie],

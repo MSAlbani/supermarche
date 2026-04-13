@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, type ChangeEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import {
   Search,
@@ -37,6 +37,10 @@ const CATEGORIES = [
   "autre",
 ];
 
+interface Product {
+  id: string;
+}
+
 export default function Vente(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState("new_sale");
   const [cart, setCart] = useState([]);
@@ -44,9 +48,10 @@ export default function Vente(): React.JSX.Element {
   const [selectedClient, setSelectedClient] = useState(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [paymentMethod, setPaymentMethod] = useState("espèces");
-  const [filteredProduits, setFiltredProduitss] = useState([]);
+  const [filteredProduits, setFiltredProduits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
   const TVA_RATE = 0.19;
 
   const handleFinalizeSale = async () => {
@@ -80,6 +85,11 @@ export default function Vente(): React.JSX.Element {
 
   const { subtotal, totalHT, tva, totalTTC, discountAmount } =
     calculateTotals();
+
+  // const filterProduct = (e: React.ChangeEvent<HTMLInputElement>)=> {
+  //   const products =
+  // }
+
   return (
     <div>
       <div className="max-w-7xl mx-auto">
@@ -136,9 +146,7 @@ export default function Vente(): React.JSX.Element {
                       placeholder="Nom du produit ou Fabricant"
                       className="pl-10"
                       value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                      }}
+                      onChange={filterProduct}
                     />
                   </div>
                 </div>
@@ -146,24 +154,24 @@ export default function Vente(): React.JSX.Element {
                 {searchTerm && (
                   <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-lg">
                     {filteredProduits.length > 0 ? (
-                      filteredProduits.map((med) => (
+                      filteredProduits.map((prod) => (
                         <div
-                          key={med.id}
+                          key={prod.id}
                           className="flex items-center justify-between p-3 border-b hover:bg-green-50 cursor-pointer"
-                          onClick={() => addToCart(med)}
+                          onClick={() => addToCart(prod)}
                         >
                           <div>
-                            <p className="font-medium">{med.nom}</p>
+                            <p className="font-medium">{prod.nom}</p>
                             <p className="text-sm text-gray-600">
-                              {med.fabricant} - {med.dosage}
+                              {prod.fabricant} - {prod.dosage}
                             </p>
                           </div>
                           <div className="text-right">
                             <span className="font-semibold text-green-600">
-                              {med.prix_unitaire?.toFixed(2)} DH
+                              {prod.prix_unitaire?.toFixed(2)} FCFA
                             </span>
                             <p className="text-xs text-gray-500">
-                              Stock: {med.stock_actuel}
+                              Stock: {prod.stock_actuel}
                             </p>
                           </div>
                         </div>

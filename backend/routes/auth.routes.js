@@ -8,7 +8,14 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authenticate, (req, res) => {
   res.status(200).json({
-    user: req.user,
+    user: req.user.id_utilisateur,
+    role: req.user.role,
+  });
+});
+router.post("/refresh", authenticate, (req, res) => {
+  res.status(200).json({
+    user: req.user.id_utilisateur,
+    role: req.user.role,
   });
 });
 

@@ -9,7 +9,7 @@ export const lesProduits = async (req, res) => {
 export const ajouterProduit = async (req, res) => {
   const { libelle, id_produit, prix_vente } = req.body;
 
-  const produit = await create(libelle, id_produit, prix_vente);
+  const produit = await create(libelle, id_produit);
   res.status(201).json({ message: "Produit ajouté " + produit });
 };
 

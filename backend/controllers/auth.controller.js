@@ -1,6 +1,12 @@
 import bcrypt from "bcryptjs";
+import pool from "../config/database.js";
 import jwt from "jsonwebtoken";
 import { createUser, getUserByLogin } from "../models/users.js";
+import {
+  create as createRefreshToken,
+  findByRefreshToken,
+  deleteByRefreshToken,
+} from "../models/refresh.js";
 
 // Inscription d'un nouvel utilisateur
 
@@ -29,36 +35,141 @@ export const login = async (req, res) => {
   if (!valid)
     return res.status(401).json({ message: "Mot de passe incorrect" });
 
-  // Générer JWT
+  // ACCESS TOKEN (court)
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     {
       id_utilisateur: user.id_utilisateur,
       role: user.role,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" },
+    { expiresIn: "15m" },
   );
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
+  // REFRESH TOKEN (long)
+
+  const refreshToken = jwt.sign(
+    {
+      id_utilisateur: user.id_utilisateur,
+    },
+    process.env.REFRESH_SECRET,
+    {
+      expiresIn: "7d",
+    },
+  );
+
+  // Stockage refresh en base
+
+  // await pool.query(
+  //   `INSERT INTO refresh_tokens (id_utilisateur, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days')`,
+  //   [user.id_utilisateur, refreshToken],
+  // );
+
+  await createRefreshToken({
+    idUtilisateur: user.id_utilisateur,
+    token: refreshToken,
   });
 
-  const decodedToken = jwt.decode(token);
+  // Cookies
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    sameSite: "strict",
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+  });
 
   res.json({
     message: "Connexion réussie",
-    token,
-    token_details: {
-      iat: decodedToken.iat,
-      exp: decodedToken.exp,
-      expires_at: new Date(decodedToken.exp * 1000),
-    },
     utilisateur: {
       id: user.id_utilisateur,
       nom: user.nom_complet,
       role: user.role,
     },
   });
+};
+
+export const refresh = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) return res.sendStatus(401);
+
+  // const stored = await pool.query(
+  //   `SELECT * FROM refresh_tokens WHERE token=$1`,
+  //   [refreshToken],
+  // );
+
+  const stored = await findByRefreshToken(refreshToken);
+
+  if (stored.rows.length === 0) return res.sendStatus(403);
+
+  jwt.verify(refreshToken, process.env.REFRESH_SECRET, async (err, decoded) => {
+    if (err) return res.sendStatus(403);
+
+    // rotation
+
+    // await pool.query("DELETE FROM refresh_tokens WHERE token=$1", [
+    //   refreshToken,
+    // ]);
+
+    await deleteByRefreshToken(refreshToken);
+
+    const user = await getUserById(decoded.id_utilisateur);
+
+    const newAccess = jwt.sign(
+      {
+        id_utilisateur: user.id_utilisateur,
+        role: user.role,
+      },
+      process.env.ACCESS_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    const newRefresh = jwt.sign(
+      { id_utilisateur: user.id_utilisateur },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    // await pool.query(
+    //   `INSERT INTO refresh_tokens (id_utilisateur, token, expires_at)
+    //    VALUES ($1, $2, NOW() + INTERVAL '7 days')`,
+    //   [user.id_utilisateur, newRefresh],
+    // );
+
+    await createRefreshToken({
+      idUtilisateur: user.id_utilisateur,
+      token: newRefresh,
+    });
+
+    res.cookie("accessToken", newAccess, {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+
+    res.cookie("refreshToken", newRefresh, {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+
+    res.json({ message: "Token renouvelé" });
+  });
+};
+
+export const logout = async (req, res) => {
+  const refresh_token = req.cookies.refreshToken;
+
+  // await pool.query(`DELETE FROM refresh_tokens WHERE token=$1`, [
+  //   refresh_token,
+  // ]);
+
+  await deleteByRefreshToken(refresh_token);
+
+  res.clearCookie("accessToken");
+  res.clearCookie(refresh_token);
+
+  res.json({ message: "Deconnecté" });
 };
