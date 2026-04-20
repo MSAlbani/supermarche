@@ -1,52 +1,12 @@
 import { Edit, Plus, Search, Trash, X } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import ProduitFiltre from "../../components/produit/ProduitFiltre";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Input from "../../components/ui/Input";
 import ProduitForm from "../../components/produit/ProduitForm";
 import Table from "../../components/ui/Table";
 import Card from "../../components/ui/Card";
-import { useProductStore } from "../../store/productStore";
-import { type Produit } from "../../store/productStore";
-
-const produitColumn = [
-  {
-    header: "ID",
-    cell: (produits: Produit) => <span>{produits.id_produit}</span>,
-  },
-
-  {
-    header: "Libellé Produit",
-    cell: (produits: Produit) => <span>{produits.libelle}</span>,
-  },
-
-  {
-    header: "Prix de vente (FCFA)",
-    cell: (produits: Produit) => <span>{produits.prix_vente}</span>,
-  },
-
-  {
-    header: "Catégorie",
-    cell: (produits: Produit) => <span>{produits.categorie}</span>,
-  },
-  {
-    header: "Actions",
-    cell: (produits: Produit) => (
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => console.log("Modifier", produits)}
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
-        <Button variant="danger" size="sm">
-          <Trash className="w-4 h-4" />
-        </Button>
-      </div>
-    ),
-  },
-];
+import { useProductStore, type Produit } from "../../store/productStore";
 
 export default function Produit() {
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -55,12 +15,93 @@ export default function Produit() {
     forme: "all",
     stock: "all",
   });
-
+  const [search, setSearch] = useState<string>("");
   const { produits, getProduits, loading, error } = useProductStore();
 
   useEffect(() => {
     getProduits();
   }, [getProduits]);
+
+  // ✅ Colonne définie dans le composant pour accéder aux handlers
+
+  const handleEdit = (p: Produit) => {
+    console.log(p);
+  };
+
+  const handleDelete = (id: number) => {
+    console.log(id);
+  };
+
+  const produitColumn = useMemo(
+    () => [
+      {
+        header: "ID",
+        cell: (p: Produit) => <span>{p.id_produit}</span>,
+      },
+      {
+        header: "Libellé du produit",
+        cell: (p: Produit) => <span>{p.libelle}</span>,
+      },
+      {
+        header: "Prix de vente (FCFA)",
+        cell: (p: Produit) => (
+          <span>{p.prix_vente.toLocaleString("fr-FR")}</span>
+        ),
+      },
+      {
+        header: "Catégorie",
+        cell: (p: Produit) => <span>{p.categorie}</span>,
+      },
+      {
+        header: "Actions",
+        cell: (p: Produit) => (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEdit(p)} // ✅ accès au state possible
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => handleDelete(p.id_produit)} // ✅ handler branché
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  // ✅ Logique de filtrage centralisée
+
+  const produitsFiltres = useMemo(() => {
+    return produits.filter((p) => {
+      // Recherche textuelle (insensible à la casse)
+      const matchSearch = p.libelle
+        .toLowerCase()
+        .includes(search.toLowerCase().trim());
+
+      // Filtre catégorie
+      const matchCategorie =
+        filters.categorie === "all" || p.categorie === filters.categorie;
+
+      // Filtre forme
+      const matchForme = filters.forme === "all" || p.forme === filters.forme;
+
+      // Filtre stock
+      const matchStock =
+        filters.stock === "all" ||
+        (filters.stock === "disponible" && (p.stock ?? 0) > 0) ||
+        (filters.stock === "rupture" && (p.stock ?? 0) === 0);
+
+      return matchSearch && matchCategorie && matchForme && matchStock;
+    });
+  }, [produits, search, filters]);
 
   return (
     <div className="">
@@ -93,14 +134,19 @@ export default function Produit() {
         {/* Partie de recherche  */}
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4 mb-4">
+          <div className="flex flex-col gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 placeholder="Rechercher un produit..."
                 className="pl-10"
                 type="text"
+                onChange={(e) => setSearch(e.target.value)}
               />
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              {produitsFiltres.length} résultat
+              {produitsFiltres.length > 1 ? "s" : ""}
             </div>
           </div>
           <ProduitFiltre filters={filters} onFiltersChange={setFilters} />
@@ -110,7 +156,13 @@ export default function Produit() {
         <Card className="border-gray-300">
           {loading && <p>Chargement...</p>}
           {error && <p className="text-red-500">{error}</p>}
-          <Table data={produits} columns={produitColumn} />
+          <Table data={produitsFiltres} columns={produitColumn} />
+          {/* ✅ Message si aucun résultat */}
+          {!loading && produitsFiltres.length === 0 && (
+            <p className="text-center text-gray-400 py-8">
+              Aucun produit ne correspond à votre recherche.
+            </p>
+          )}
         </Card>
       </div>
     </div>

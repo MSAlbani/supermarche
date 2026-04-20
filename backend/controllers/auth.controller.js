@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import pool from "../config/database.js";
 import jwt from "jsonwebtoken";
-import { createUser, getUserByLogin } from "../models/users.js";
+import { createUser, getUserByLogin, getUserById } from "../models/users.js";
 import {
   create as createRefreshToken,
   findByRefreshToken,
@@ -35,7 +35,7 @@ export const login = async (req, res) => {
   if (!valid)
     return res.status(401).json({ message: "Mot de passe incorrect" });
 
-  // ACCESS TOKEN (court)
+  // ACCESS TOKEN
 
   const accessToken = jwt.sign(
     {
@@ -43,10 +43,10 @@ export const login = async (req, res) => {
       role: user.role,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" },
+    { expiresIn: "1m" },
   );
 
-  // REFRESH TOKEN (long)
+  // REFRESH TOKEN
 
   const refreshToken = jwt.sign(
     {
@@ -104,16 +104,12 @@ export const refresh = async (req, res) => {
 
   const stored = await findByRefreshToken(refreshToken);
 
-  if (stored.rows.length === 0) return res.sendStatus(403);
+  if (Object.keys(stored).length === 0) return res.sendStatus(403);
 
   jwt.verify(refreshToken, process.env.REFRESH_SECRET, async (err, decoded) => {
     if (err) return res.sendStatus(403);
 
     // rotation
-
-    // await pool.query("DELETE FROM refresh_tokens WHERE token=$1", [
-    //   refreshToken,
-    // ]);
 
     await deleteByRefreshToken(refreshToken);
 
@@ -124,8 +120,8 @@ export const refresh = async (req, res) => {
         id_utilisateur: user.id_utilisateur,
         role: user.role,
       },
-      process.env.ACCESS_SECRET,
-      { expiresIn: "15m" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1m" },
     );
 
     const newRefresh = jwt.sign(
@@ -160,7 +156,7 @@ export const refresh = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const refresh_token = req.cookies.refreshToken;
+  const { refresh_token, accessToken } = req.cookies;
 
   // await pool.query(`DELETE FROM refresh_tokens WHERE token=$1`, [
   //   refresh_token,
@@ -168,7 +164,7 @@ export const logout = async (req, res) => {
 
   await deleteByRefreshToken(refresh_token);
 
-  res.clearCookie("accessToken");
+  res.clearCookie(accessToken);
   res.clearCookie(refresh_token);
 
   res.json({ message: "Deconnecté" });

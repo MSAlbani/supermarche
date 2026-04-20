@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login } from "../controllers/auth.controller.js";
+import { register, login, refresh } from "../controllers/auth.controller.js";
 import { authenticate } from "../middlewares/auth.js";
 
 const router = express.Router();
@@ -12,11 +12,6 @@ router.get("/me", authenticate, (req, res) => {
     role: req.user.role,
   });
 });
-router.post("/refresh", authenticate, (req, res) => {
-  res.status(200).json({
-    user: req.user.id_utilisateur,
-    role: req.user.role,
-  });
-});
+router.post("/refresh", refresh);
 
 export default router;

@@ -3,7 +3,13 @@ import pool from "../config/database.js";
 export const create = async (data) => {
   const { idUtilisateur, token } = data;
   const result = await pool.query(
-    `INSERT INTO refresh_tokens (id_utilisateur, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days') RETURNING *`,
+    `INSERT INTO refresh_tokens (id_utilisateur, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days')
+    ON CONFLICT (id_utilisateur)
+     DO UPDATE SET
+       token = EXCLUDED.token,
+       expires_at = EXCLUDED.expires_at,
+       create_at = NOW()
+    RETURNING *`,
     [idUtilisateur, token],
   );
   return result.rows[0];

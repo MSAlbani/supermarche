@@ -35,3 +35,16 @@ export const allUsers = async () => {
 
   return utilisateurs.rows;
 };
+
+// Chercher un utilisateur grâce à son identifiant
+
+export const getUserById = async (id_utilisateur) => {
+  const result = await pool.query(
+    `SELECT u.id_utilisateur, u.nom_complet, r.libelle AS role
+        FROM utilisateurs u
+        LEFT JOIN roles r ON r.id_role = u.id_role
+        WHERE u.id_utilisateur = $1`,
+    [id_utilisateur],
+  );
+  return result.rows[0];
+};

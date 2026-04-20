@@ -6,6 +6,8 @@ export interface Produit {
   libelle: string;
   prix_vente: number;
   categorie: string;
+  forme: string;
+  stock?: number;
   actif: boolean;
 }
 
