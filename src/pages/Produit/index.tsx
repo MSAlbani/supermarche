@@ -127,7 +127,16 @@ export default function Produit() {
         </div>
         {showForm && (
           <div>
-            <ProduitForm newProduct={true} />
+            <ProduitForm
+              newProduct={true}
+              onSuccess={() => {
+                setShowForm(false);
+                getProduits();
+              }}
+              onCancel={() => {
+                setShowForm(false);
+              }}
+            />
           </div>
         )}
 
