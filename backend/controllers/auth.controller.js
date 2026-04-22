@@ -43,7 +43,7 @@ export const login = async (req, res) => {
       role: user.role,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1m" },
+    { expiresIn: "15m" },
   );
 
   // REFRESH TOKEN
@@ -121,7 +121,7 @@ export const refresh = async (req, res) => {
         role: user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1m" },
+      { expiresIn: "15m" },
     );
 
     const newRefresh = jwt.sign(

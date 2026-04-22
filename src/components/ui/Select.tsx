@@ -3,25 +3,35 @@ import React, {
   createContext,
   useContext,
   useState,
+  useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 
-/**
- * Contexte partagé entre tous les sous-composants Select
- */
+// ─────────────────────────────────────────────
+// Contexte
+// ─────────────────────────────────────────────
 
 interface SelectContextType {
   value: string;
   setValue: (value: string) => void;
+  label: string; // ✅ ajout : texte affiché (libellé)
+  setLabel: (label: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
 }
 
 const SelectContext = createContext<SelectContextType | null>(null);
 
-/* ============================================================
-   Select (Root)
-============================================================ */
+const useSelectContext = () => {
+  const ctx = useContext(SelectContext);
+  if (!ctx) throw new Error("Composant utilisé hors de <Select>");
+  return ctx;
+};
+
+// ─────────────────────────────────────────────
+// Select (Root)
+// ─────────────────────────────────────────────
 
 interface SelectProps {
   value: string;
@@ -29,39 +39,52 @@ interface SelectProps {
   children: ReactNode;
 }
 
-/**
- * Composant racine Select
- * Fournit la valeur et l'état d'ouverture
- */
-
 export const Select: React.FC<SelectProps> = ({
   value,
   onValueChange,
   children,
 }) => {
   const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState(""); // ✅ état label ajouté
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // ✅ Fermeture au clic extérieur
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
   return (
     <SelectContext.Provider
-      value={{ value, setValue: onValueChange, open, setOpen }}
+      value={{ value, setValue: onValueChange, label, setLabel, open, setOpen }}
     >
-      <div className="relative">{children}</div>
+      <div className="relative" ref={containerRef}>
+        {children}
+      </div>
     </SelectContext.Provider>
   );
 };
 
-/* ============================================================
-   SelectTrigger
-============================================================ */
-
-/**
- * Bouton qui ouvre / ferme le Select
- */
+// ─────────────────────────────────────────────
+// SelectTrigger
+// ─────────────────────────────────────────────
 
 export const SelectTrigger: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const ctx = useContext(SelectContext);
-  if (!ctx) return null;
+  const ctx = useSelectContext();
 
   return (
     <button
@@ -70,7 +93,6 @@ export const SelectTrigger: React.FC<{ children: ReactNode }> = ({
       aria-expanded={ctx.open}
       onClick={() => ctx.setOpen(!ctx.open)}
       onKeyDown={(e) => {
-        // Support clavier
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           ctx.setOpen(!ctx.open);
@@ -81,57 +103,58 @@ export const SelectTrigger: React.FC<{ children: ReactNode }> = ({
       }}
       className="
         w-full flex justify-between items-center border
-        border-gray-300 rounded-md px-3 py-2 bg-white text-sm 
+        border-gray-300 rounded-md px-3 py-2 bg-white text-sm
         focus:outline-none focus:ring-2 focus:ring-green-500
+        transition-colors hover:border-gray-400
       "
     >
       {children}
-      <ChevronDown className="w-4 h-4" />
+      <ChevronDown
+        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+          ctx.open ? "rotate-180" : ""
+        }`}
+      />
     </button>
   );
 };
 
-/* ============================================================
-   SelectValue
-============================================================ */
-
-/**
- * Affiche la valeur sélectionnée ou le placeholder
- */
+// ─────────────────────────────────────────────
+// SelectValue
+// ─────────────────────────────────────────────
 
 export const SelectValue: React.FC<{ placeholder?: string }> = ({
   placeholder,
 }) => {
-  const ctx = useContext(SelectContext);
-  if (!ctx) return null;
+  const ctx = useSelectContext();
 
   return (
-    <span className="text-gray-700">
-      {ctx.value !== "all" ? ctx.value : placeholder}
+    // ✅ Affiche le label (libellé) et non la value brute (id)
+    // ✅ Condition corrigée : placeholder si rien n'est sélectionné
+    <span className={ctx.label ? "text-gray-700" : "text-gray-400"}>
+      {ctx.label || placeholder}
     </span>
   );
 };
 
-/* ============================================================
-   SelectContent
-============================================================ */
-
-/**
- * Conteneur des options (menu déroulant)
- */
+// ─────────────────────────────────────────────
+// SelectContent
+// ─────────────────────────────────────────────
 
 export const SelectContent: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const ctx = useContext(SelectContext);
-  if (!ctx || !ctx.open) return null;
+  const ctx = useSelectContext();
+
+  if (!ctx.open) return null;
+
   return (
     <div
+      role="listbox"
       className="
-        absolute z-10 mt-2 w-full
-        bg-white border rounded-md shadow-md
-        transition-all duration-150 ease-out
-        origin-top animate-select-open
+        absolute z-10 mt-1 w-full
+        bg-white border border-gray-200 rounded-md shadow-lg
+        animate-in fade-in-0 zoom-in-95
+        max-h-60 overflow-y-auto
       "
     >
       {children}
@@ -139,41 +162,40 @@ export const SelectContent: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-/* ============================================================
-   SelectItem
-============================================================ */
+// ─────────────────────────────────────────────
+// SelectItem
+// ─────────────────────────────────────────────
 
 interface SelectItemProps {
   value: string;
   children: ReactNode;
 }
 
-/**
- * Élément sélectionnable
- */
 export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
-  const ctx = useContext(SelectContext);
-  if (!ctx) return null;
+  const ctx = useSelectContext();
+  const isSelected = ctx.value === value;
+
+  const handleSelect = () => {
+    ctx.setValue(value);
+    ctx.setLabel(String(children)); // ✅ stocke le texte affiché
+    ctx.setOpen(false);
+  };
 
   return (
     <div
       role="option"
+      aria-selected={isSelected}
       tabIndex={0}
-      onClick={() => {
-        ctx.setValue(value);
-        ctx.setOpen(false); // fermeture après sélection
-      }}
+      onClick={handleSelect}
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          ctx.setValue(value);
-          ctx.setOpen(false);
-        }
+        if (e.key === "Enter") handleSelect();
       }}
-      className="
-        px-3 py-2 text-sm cursor-pointer
+      className={`
+        px-3 py-2 text-sm cursor-pointer outline-none
+        transition-colors duration-100
         hover:bg-green-50 focus:bg-green-100
-        outline-none
-      "
+        ${isSelected ? "bg-green-50 text-green-700 font-medium" : "text-gray-700"}
+      `}
     >
       {children}
     </div>
