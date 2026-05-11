@@ -97,6 +97,7 @@ CREATE TABLE ventes (
     tva NUMERIC(14,2),
     mode_paiement VARCHAR(30),
     statut_paiement VARCHAR(20) CHECK (statut_paiement IN ('PAYE', 'EN_COURS', 'IMPAYE')),
+    montant_paye NUMERIC(14,2),
     id_client INT REFERENCES clients(id_client),
     id_utilisateur INT REFERENCES utilisateurs(id_utilisateur)
 );

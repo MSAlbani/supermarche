@@ -1,5 +1,9 @@
 import pool from "../config/database.js";
-import { getAllVentes, getVenteById } from "../models/vente.js";
+import {
+  findAllVentes,
+  findVenteById,
+  allProduitsVente,
+} from "../models/vente.js";
 
 export const validerVente = async (req, res) => {
   const client = await pool.connect();
@@ -156,10 +160,15 @@ export const detailVente = async (req, res) => {
 
   // return res.json(id_vente);
 
-  const vente = await getVenteById(id_vente);
+  // const vente = await getVenteById(id_vente);
 
   if (vente.length === 0)
     return res.status(404).json({ message: "Aucune vente trouvé" });
 
   res.json(vente);
+};
+
+export const getProduitVente = async (req, res) => {
+  const produits = await allProduitsVente();
+  res.json(produits);
 };

@@ -41,3 +41,7 @@ export const getPanierDetail = async (id_utilisateur) => {
   const { rows } = await pool.query(query, [id_utilisateur]);
   return rows;
 };
+
+export const findAllPanier = async () => {
+  const paniers = await pool.query(`SELECT *`);
+};
